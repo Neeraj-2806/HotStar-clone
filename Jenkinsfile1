@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk'
+        nodejs 'node'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        PORT = '3000'
+    }
+
+    stages {
+        stage('Git checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/gashok13193/HotStar-clone.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=Hotstar \
+                    -Dsonar.projectKey=Hotstar \
+                    -Dsonar.projectVersion=1.0 \
+                    -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage("trivy scan"){
+            steps{
+                script{
+                    sh 'trivy fs  --severity HIGH,CRITICAL ./ --format table --output trivy-fs-report.txt'
+                }
+            }
+        }
+        stage("docker build"){
+            steps{
+                script{
+                    withDockerRegistry(credentialsId: 'Docker') {
+                        sh 'docker build -t hotstar .'
+                        sh 'docker tag hotstar neeraj2806/hotstar:latest'
+                        sh 'docker push neeraj2806/hotstar:latest'
+                    }
+                }
+            }
+        }
+        stage("Trivy Image scan"){
+            steps{
+                script{
+                    sh 'trivy image --severity HIGH,CRITICAL neeraj2806/hotstar:latest --format table --output trivy-image-report.txt'
+                }
+            }
+        }
+        stage("run docker image"){
+            steps{
+                sh 'docker run -dt --name hotstar-ctr -p 3000:3000 hotstar:latest'
+            }
+            
+        }
+    }
+}
