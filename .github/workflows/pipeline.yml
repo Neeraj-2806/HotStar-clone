@@ -29,4 +29,10 @@ jobs:
          projectBaseDir: .
          projectKey: Hotstar
          projectName: Hotstar
+        env:
+           SONAR_TOKEN: ${{secrets.SONARQUBE_TOKEN }}
+    #5 trivy scan 
+      - name: trivy scan
+        uses: aquasecurity/trivy-action@0.28.0
+        
          
