@@ -42,4 +42,14 @@ jobs:
     #6 build docker image
       - name: building docker image 
         run: docker build -t ${{ secrets.DOCKER_USER }}/hotstar:${{ github.sha }} .
+    #7 Trivy scan
+      - name: Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image:ref: ${{ secrets.DOCKER_USER }}/hotstar:${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL, HIGH'
+    #8 push to docker hub
+      - name: push to docker hub
+        run: docker push ${{ secrets.DOCKER_USER }}/hotstar:${{ github.sha }}
          
