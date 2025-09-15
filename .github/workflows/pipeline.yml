@@ -30,7 +30,8 @@ jobs:
          projectKey: Hotstar
          projectName: Hotstar
         env:
-           SONAR_TOKEN: ${{secrets.SONARQUBE_TOKEN }}
+           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
     #5 login to docker hub
       - name: login to docker hub
         uses: docker/login-action@v2
