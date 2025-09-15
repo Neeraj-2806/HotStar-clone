@@ -17,3 +17,16 @@ jobs:
     #2 Set up nodejs
       - name: setup nodejs
         uses: actions/setup-node@v3
+        with:
+           node_version: "23"
+    #3 Install nodejs dependencies
+      - name: install dependencies
+        run: npm install
+    #4 Sonarqube Scan
+      - name: sonarqube scan
+        uses: SonarSource/sonarqube-scan-action@v3
+        with:
+         projectBaseDir: .
+         projectKey: Hotstar
+         projectName: Hotstar
+         
