@@ -1,1 +1,19 @@
 name: CICD pipeline for hotstar app
+on: 
+  push:
+    branches:
+     - main
+  pull_request:
+    branches: 
+      - main
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+
+    steps:
+    #1 Checkout code
+      - name: checkout code
+        uses: actions/checkout@v3
+    #2 Set up nodejs
+      - name: setup nodejs
+        uses: actions/setup-node@v3
