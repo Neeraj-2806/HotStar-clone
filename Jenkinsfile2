@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs "node"
+        jdk "jdk"
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    changelog: false,
+                    poll: false,
+                    url: 'https://github.com/Neeraj-2806/HotStar-clone.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=Hotstar \
+                    -Dsonar.projectKey=Hotstar \
+                    -Dsonar.projectVersion=1.0 \
+                    -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
+
+        stage('Install Node.js dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh 'trivy fs --severity HIGH,CRITICAL --format table --output trivy-fs-report.txt ./'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred', toolname: 'docker') {
+                        sh 'docker build -t neeraj2806/new-hotstar:latest .'
+                        sh 'docker push neeraj2806/new-hotstar:latest'
+                    }
+                }
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh '''
+                docker rm -f hotstar-ctr || true
+                docker run -d --name hotstar-ctr -p 3000:3000 neeraj2806/new-hotstar:latest
+                '''
+            }
+        }
+    }
+}
